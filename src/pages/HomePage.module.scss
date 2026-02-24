@@ -1,0 +1,42 @@
+.homePage {
+  padding: var(--space-md);
+}
+
+.header {
+  margin-bottom: var(--space-lg);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.loading,
+.error {
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+}
+
+.error {
+  color: var(--color-error);
+}
+
+.movieGrid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  gap: var(--grid-gap);
+}
+
+@media (max-width: 1200px) {
+  .movieGrid {
+    --grid-cols: 3;
+  }
+}
+
+@media (max-width: 768px) {
+  .movieGrid {
+    --grid-cols: 2;
+  }
+}

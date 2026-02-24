@@ -1,0 +1,46 @@
+.page {
+  padding: var(--space-md);
+}
+
+.content {
+  display: flex;
+  gap: var(--space-lg);
+  max-width: 900px;
+}
+
+.poster {
+  width: 300px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.info {
+  flex: 1;
+}
+
+.title {
+  margin: 0 0 var(--space-xs);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.year {
+  display: block;
+  margin-bottom: var(--space-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text-muted);
+}
+
+.overview {
+  margin: 0 0 var(--space-md);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.rating {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-muted);
+}
