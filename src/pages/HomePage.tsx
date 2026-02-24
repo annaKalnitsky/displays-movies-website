@@ -12,9 +12,13 @@ import styles from './HomePage.module.scss';
 const HomePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { popular, nowPlaying, isLoading, error } = useSelector((state: RootState) => state.movies);
+  const { popular, nowPlaying, searchResults, searchQuery, isLoading, error } = useSelector(
+    (state: RootState) => state.movies
+  );
   const favorites = useSelector((state: RootState) => state.favorites.items);
   const [activeCategory, setActiveCategory] = useState<Category>(Category.Popular);
+
+  const hasSearchQuery = Boolean(searchQuery?.trim());
 
   const { ref, focusKey } = useFocusable({
     focusKey: 'home-page',
@@ -32,8 +36,9 @@ const HomePage = () => {
     }
   }, [activeCategory, dispatch]);
 
-  const movies =
-    activeCategory === Category.Popular
+  const movies = hasSearchQuery
+    ? searchResults
+    : activeCategory === Category.Popular
       ? popular
       : activeCategory === Category.AiringNow
         ? nowPlaying
@@ -52,8 +57,9 @@ const HomePage = () => {
     );
   }
 
-  const categoryTitle =
-    activeCategory === Category.Popular
+  const categoryTitle = hasSearchQuery
+    ? `Search: ${searchQuery}`
+    : activeCategory === Category.Popular
       ? 'Popular'
       : activeCategory === Category.AiringNow
         ? 'Airing Now'

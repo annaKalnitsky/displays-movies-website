@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, takeLatest, debounce } from 'redux-saga/effects';
 import type { SagaIterator } from 'redux-saga';
 import {
   MOVIES_ACTIONS,
@@ -6,10 +6,14 @@ import {
   fetchPopularFailure,
   fetchNowPlayingSuccess,
   fetchNowPlayingFailure,
+  searchRequest,
   searchSuccess,
   searchFailure,
 } from '../slices/moviesSlice';
 import { fetchPopularMovies, fetchNowPlayingMovies, searchMovies } from '../../services/tmdbApi';
+
+const DEBOUNCE_MS = 500;
+const MIN_SEARCH_LENGTH = 2;
 
 function* fetchPopularSaga(action: { type: string; payload?: number }): SagaIterator {
   try {
@@ -43,10 +47,14 @@ function* fetchNowPlayingSaga(action: { type: string; payload?: number }): SagaI
   }
 }
 
-function* searchSaga(action: { type: string; payload?: { query: string; page?: number } }): SagaIterator {
+function* searchInputChangeSaga(action: { type: string; payload?: { query: string } }): SagaIterator {
+  const query = (action.payload?.query ?? '').trim();
+  if (query.length < MIN_SEARCH_LENGTH) return;
+
+  yield put(searchRequest({ query }));
+
   try {
-    const { query, page = 1 } = action.payload ?? { query: '', page: 1 };
-    const data = yield call(searchMovies, query, page);
+    const data = yield call(searchMovies, query, 1);
     yield put(
       searchSuccess({
         results: data.results ?? [],
@@ -62,5 +70,5 @@ function* searchSaga(action: { type: string; payload?: { query: string; page?: n
 export function* moviesSaga() {
   yield takeLatest(MOVIES_ACTIONS.FETCH_POPULAR_REQUEST, fetchPopularSaga);
   yield takeLatest(MOVIES_ACTIONS.FETCH_NOW_PLAYING_REQUEST, fetchNowPlayingSaga);
-  yield takeLatest(MOVIES_ACTIONS.SEARCH_REQUEST, searchSaga);
+  yield debounce(DEBOUNCE_MS, MOVIES_ACTIONS.SEARCH_INPUT_CHANGE, searchInputChangeSaga);
 }

@@ -6,7 +6,7 @@ import './index.scss'
 import App from './App.tsx'
 import { store } from './store'
 
-init({ shouldFocusDOMNode: true })
+init({ shouldFocusDOMNode: true, useGetBoundingClientRect: true })
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

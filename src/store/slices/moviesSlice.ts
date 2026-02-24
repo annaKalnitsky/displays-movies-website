@@ -13,6 +13,7 @@ export interface MoviesState {
   popular: Movie[];
   nowPlaying: Movie[];
   searchResults: Movie[];
+  searchQuery: string;
   currentPage: number;
   totalPages: number;
   isLoading: boolean;
@@ -23,6 +24,7 @@ const initialState: MoviesState = {
   popular: [],
   nowPlaying: [],
   searchResults: [],
+  searchQuery: '',
   currentPage: 1,
   totalPages: 1,
   isLoading: false,
@@ -36,9 +38,11 @@ export const MOVIES_ACTIONS = {
   FETCH_NOW_PLAYING_REQUEST: 'movies/fetchNowPlayingRequest',
   FETCH_NOW_PLAYING_SUCCESS: 'movies/fetchNowPlayingSuccess',
   FETCH_NOW_PLAYING_FAILURE: 'movies/fetchNowPlayingFailure',
+  SEARCH_INPUT_CHANGE: 'movies/searchInputChange',
   SEARCH_REQUEST: 'movies/searchRequest',
   SEARCH_SUCCESS: 'movies/searchSuccess',
   SEARCH_FAILURE: 'movies/searchFailure',
+  SEARCH_CLEAR: 'movies/searchClear',
 } as const;
 
 export function fetchPopularRequest(page?: number) {
@@ -65,8 +69,16 @@ export function fetchNowPlayingFailure(error: string) {
   return { type: MOVIES_ACTIONS.FETCH_NOW_PLAYING_FAILURE, payload: error };
 }
 
+export function searchInputChange(query: string) {
+  return { type: MOVIES_ACTIONS.SEARCH_INPUT_CHANGE, payload: { query } };
+}
+
 export function searchRequest(payload: { query: string; page?: number }) {
   return { type: MOVIES_ACTIONS.SEARCH_REQUEST, payload };
+}
+
+export function searchClear() {
+  return { type: MOVIES_ACTIONS.SEARCH_CLEAR };
 }
 
 export function searchSuccess(data: { results: Movie[]; page: number; total_pages: number }) {
@@ -112,13 +124,25 @@ export function moviesReducer(state = initialState, action: { type: string; payl
       const { results, page, total_pages } = action.payload as { results: Movie[]; page: number; total_pages: number };
       return {
         ...state,
-        searchResults: results,
-        currentPage: page,
-        totalPages: total_pages,
+        searchResults: results ?? [],
+        currentPage: page ?? 1,
+        totalPages: total_pages ?? 1,
         isLoading: false,
         error: null,
       };
     }
+
+    case MOVIES_ACTIONS.SEARCH_INPUT_CHANGE: {
+      const query = (action.payload as { query: string })?.query ?? '';
+      return {
+        ...state,
+        searchQuery: query,
+        ...(query.trim().length === 0 && { searchResults: [] }),
+      };
+    }
+
+    case MOVIES_ACTIONS.SEARCH_CLEAR:
+      return { ...state, searchResults: [], searchQuery: '', isLoading: false };
 
     case MOVIES_ACTIONS.FETCH_POPULAR_FAILURE:
     case MOVIES_ACTIONS.FETCH_NOW_PLAYING_FAILURE:
