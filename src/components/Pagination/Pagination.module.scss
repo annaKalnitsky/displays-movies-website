@@ -1,0 +1,40 @@
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+}
+
+.button {
+  min-width: 36px;
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+  transition: color 0.2s ease;
+
+  &.active {
+    background: var(--color-bg-card);
+    color: var(--color-text);
+    border: 1px solid var(--color-focus);
+  }
+
+  &.focused:not(.active) {
+    box-shadow: 0 0 0 2px var(--color-focus);
+  }
+
+  &.active.focused {
+    box-shadow: 0 0 0 2px var(--color-focus), 0 0 12px rgba(255, 255, 255, 0.3);
+  }
+
+  &.arrow {
+    font-size: 1.25rem;
+  }
+}

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { MovieCard } from '../components/MovieCard/MovieCard';
 import CategoryFilter from '../components/CategoryFilter/CategoryFilter';
+import { Pagination } from '../components/Pagination/Pagination';
 import { fetchPopularRequest, fetchNowPlayingRequest } from '../store/slices/moviesSlice';
 import type { RootState } from '../store';
 import { Category } from '../constants/category';
@@ -12,7 +13,7 @@ import styles from './HomePage.module.scss';
 const HomePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { popular, nowPlaying, searchResults, searchQuery, isLoading, error } = useSelector(
+  const { popular, nowPlaying, searchResults, searchQuery, isLoading, error, currentPage, totalPages } = useSelector(
     (state: RootState) => state.movies
   );
   const favorites = useSelector((state: RootState) => state.favorites.items);
@@ -27,11 +28,9 @@ const HomePage = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchPopularRequest(1));
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (activeCategory === Category.AiringNow) {
+    if (activeCategory === Category.Popular) {
+      dispatch(fetchPopularRequest(1));
+    } else if (activeCategory === Category.AiringNow) {
       dispatch(fetchNowPlayingRequest(1));
     }
   }, [activeCategory, dispatch]);
@@ -44,10 +43,26 @@ const HomePage = () => {
         ? nowPlaying
         : favorites;
 
+  const prevPageRef = useRef(currentPage);
+
   useEffect(() => {
     const timer = setTimeout(() => setFocus('filter-popular'), 100);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const isPageChange = prevPageRef.current !== currentPage;
+    prevPageRef.current = currentPage;
+    if (
+      isPageChange &&
+      (activeCategory === Category.Popular || activeCategory === Category.AiringNow) &&
+      movies.length > 0
+    ) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const timer = setTimeout(() => setFocus(`movie-${movies[0].id}`), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPage, activeCategory, movies]);
 
   if (error) {
     return (
@@ -78,15 +93,31 @@ const HomePage = () => {
         ) : movies.length === 0 ? (
           <p className={styles.empty}>No movies to show</p>
         ) : (
-          <div className={styles.movieGrid}>
-            {movies.map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onSelect={(m) => navigate(`/movie/${m.id}`)}
+          <>
+            <div className={styles.movieGrid}>
+              {movies.map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  onSelect={(m) => navigate(`/movie/${m.id}`)}
+                />
+              ))}
+            </div>
+            {(activeCategory === Category.Popular || activeCategory === Category.AiringNow) && totalPages > 1 && (
+              <Pagination
+                key={activeCategory}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageSelect={(page) => {
+                  if (activeCategory === Category.Popular) {
+                    dispatch(fetchPopularRequest(page));
+                  } else {
+                    dispatch(fetchNowPlayingRequest(page));
+                  }
+                }}
               />
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </FocusContext.Provider>
