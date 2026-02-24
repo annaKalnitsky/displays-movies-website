@@ -23,6 +23,11 @@
   color: var(--color-error);
 }
 
+.empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+}
+
 .movieGrid {
   display: grid;
   grid-template-columns: repeat(var(--grid-cols), 1fr);

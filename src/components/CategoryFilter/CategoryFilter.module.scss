@@ -1,0 +1,27 @@
+.nav {
+  display: flex;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.tab {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-inactive);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  outline: none;
+  transition: color 0.2s ease;
+
+  &.active,
+  &.focused {
+    color: var(--color-text);
+  }
+
+  &.focused {
+    box-shadow: 0 0 0 1px var(--color-focus);
+  }
+}

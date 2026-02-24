@@ -1,43 +1,48 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { MovieCard } from '../components/MovieCard/MovieCard';
-import { fetchPopularRequest } from '../store/slices/moviesSlice';
+import CategoryFilter from '../components/CategoryFilter/CategoryFilter';
+import { fetchPopularRequest, fetchNowPlayingRequest } from '../store/slices/moviesSlice';
 import type { RootState } from '../store';
-import useKeyboardNavigation from '../hooks/useKeyboardNavigation';
+import { Category } from '../constants/category';
 import styles from './HomePage.module.scss';
 
 const HomePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { popular, isLoading, error } = useSelector((state: RootState) => state.movies);
-  const [focusedIndex, setFocusedIndex] = useState(0);
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
+  const { popular, nowPlaying, isLoading, error } = useSelector((state: RootState) => state.movies);
+  const favorites = useSelector((state: RootState) => state.favorites.items);
+  const [activeCategory, setActiveCategory] = useState<Category>(Category.Popular);
+
+  const { ref, focusKey } = useFocusable({
+    focusKey: 'home-page',
+    focusable: false,
+    trackChildren: true,
+  });
 
   useEffect(() => {
     dispatch(fetchPopularRequest(1));
   }, [dispatch]);
 
   useEffect(() => {
-    cardRefs.current = cardRefs.current.slice(0, popular.length);
-    setFocusedIndex(0);
-  }, [popular.length]);
+    if (activeCategory === Category.AiringNow) {
+      dispatch(fetchNowPlayingRequest(1));
+    }
+  }, [activeCategory, dispatch]);
+
+  const movies =
+    activeCategory === Category.Popular
+      ? popular
+      : activeCategory === Category.AiringNow
+        ? nowPlaying
+        : favorites;
 
   useEffect(() => {
-    const el = cardRefs.current[focusedIndex];
-    el?.focus();
-  }, [focusedIndex]);
-
-  useKeyboardNavigation({
-    itemCount: popular.length,
-    focusedIndex,
-    onFocusChange: setFocusedIndex,
-    onSelect: (index) => {
-      const movie = popular[index];
-      if (movie) navigate(`/movie/${movie.id}`);
-    },
-    enabled: !isLoading && popular.length > 0,
-  });
+    const timer = setTimeout(() => setFocus('filter-popular'), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (error) {
     return (
@@ -47,27 +52,38 @@ const HomePage = () => {
     );
   }
 
-  return (
-    <div className={styles.homePage}>
-      <header className={styles.header}>
-        <h1 className={styles.title}>Popular Movies</h1>
-      </header>
+  const categoryTitle =
+    activeCategory === Category.Popular
+      ? 'Popular'
+      : activeCategory === Category.AiringNow
+        ? 'Airing Now'
+        : 'My Favorites';
 
-      {isLoading ? (
-        <p className={styles.loading}>Loading...</p>
-      ) : (
-        <div className={styles.movieGrid}>
-          {popular.map((movie, index) => (
-            <MovieCard
-              key={movie.id}
-              ref={(el) => { cardRefs.current[index] = el; }}
-              movie={movie}
-              isFocused={focusedIndex === index}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+  return (
+    <FocusContext.Provider value={focusKey}>
+      <div ref={ref} className={styles.homePage}>
+        <header className={styles.header}>
+          <h1 className={styles.title}>{categoryTitle}</h1>
+          <CategoryFilter activeCategory={activeCategory} onSelect={setActiveCategory} />
+        </header>
+
+        {isLoading && movies.length === 0 ? (
+          <p className={styles.loading}>Loading...</p>
+        ) : movies.length === 0 ? (
+          <p className={styles.empty}>No movies to show</p>
+        ) : (
+          <div className={styles.movieGrid}>
+            {movies.map((movie) => (
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                onSelect={(m) => navigate(`/movie/${m.id}`)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </FocusContext.Provider>
   );
 };
 

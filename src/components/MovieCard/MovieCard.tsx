@@ -1,24 +1,26 @@
-import { forwardRef } from 'react';
+import { useFocusable } from '@noriginmedia/norigin-spatial-navigation';
 import type { Movie } from '../../store/slices/moviesSlice';
 import getPosterUrl from '../../utils/imageUrl';
 import styles from './MovieCard.module.scss';
 
 interface MovieCardProps {
   movie: Movie;
-  isFocused?: boolean;
+  onSelect?: (movie: Movie) => void;
 }
 
-export const MovieCard = forwardRef<HTMLElement, MovieCardProps>(function MovieCard(
-  { movie, isFocused = false },
-  ref
-) {
+export const MovieCard = ({ movie, onSelect }: MovieCardProps) => {
+  const { ref, focused } = useFocusable({
+    focusKey: `movie-${movie.id}`,
+    onEnterPress: () => onSelect?.(movie),
+  });
+
   const posterUrl = getPosterUrl(movie.poster_path);
   const year = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
 
   return (
     <article
       ref={ref}
-      className={`${styles.movieCard} ${isFocused ? styles.focused : ''}`}
+      className={`${styles.movieCard} ${focused ? styles.focused : ''}`}
       tabIndex={-1}
     >
       <img
@@ -34,4 +36,4 @@ export const MovieCard = forwardRef<HTMLElement, MovieCardProps>(function MovieC
       </div>
     </article>
   );
-});
+};

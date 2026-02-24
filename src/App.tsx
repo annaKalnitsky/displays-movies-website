@@ -9,8 +9,18 @@ const App = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === KeyCode.Tab) e.preventDefault();
     };
+    const handleWheel = (e: WheelEvent) => e.preventDefault();
+    const handleTouchMove = (e: TouchEvent) => e.preventDefault();
+
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleWheel);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
   }, []);
 
   return (
