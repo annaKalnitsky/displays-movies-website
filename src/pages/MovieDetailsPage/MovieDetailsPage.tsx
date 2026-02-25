@@ -31,6 +31,8 @@ const MovieDetailsPage = () => {
     }
   };
 
+  const isPopup = new URLSearchParams(window.location.search).get('popup') === '1';
+
   useEffect(() => {
     if (!id) return;
     const movieId = parseInt(id, 10);
@@ -47,12 +49,16 @@ const MovieDetailsPage = () => {
       if (e.key === KeyCode.Escape) {
         e.preventDefault();
         e.stopPropagation();
-        navigate(-1);
+        if (isPopup) {
+          window.close();
+        } else {
+          navigate(-1);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown, true);
     return () => window.removeEventListener('keydown', handleKeyDown, true);
-  }, [navigate]);
+  }, [isPopup, navigate]);
 
   const { ref: pageRef, focusKey, focusSelf } = useFocusable({
     focusKey: 'movie-details-page',

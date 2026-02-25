@@ -1,5 +1,4 @@
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { MovieCard } from '../../../components/MovieCard/MovieCard';
 import { Spinner } from '../../../components/Spinner/Spinner';
 import { Pagination } from '../../../components/Pagination/Pagination';
@@ -28,9 +27,12 @@ export const HomeContent = ({
   pagination: { enabled, currentPage, totalPages, resetKey, activeCategory },
 }: HomeContentProps) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const openMovie = (movieId: number) => navigate(`/movie/${movieId}`);
+  const openMovie = (movieId: number) => {
+    const url = `${window.location.origin}/movie/${movieId}?popup=1`;
+    const features = 'noopener,width=900,height=700,menubar=no,toolbar=no,location=no,status=no';
+    window.open(url, '_blank', features);
+  };
   const handlePageSelect = (page: number) => {
     if (activeCategory === Category.Popular) dispatch(fetchPopularRequest(page));
     else if (activeCategory === Category.AiringNow) dispatch(fetchNowPlayingRequest(page));

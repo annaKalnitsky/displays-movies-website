@@ -16,7 +16,9 @@ const HomePage = () => {
   const favorites = useSelector(selectFavoriteMovies);
   const favoriteIds = useSelector((state: RootState) => state.favorites.ids);
   const movieDetailsById = useSelector((state: RootState) => state.movies.movieDetailsById);
+
   const [activeCategory, setActiveCategory] = useState<Category>(Category.Popular);
+  const prevPageRef = useRef(currentPage);
 
   const hasSearchQuery = Boolean(searchQuery?.trim());
   const isPaginatedCategory = activeCategory === Category.Popular || activeCategory === Category.AiringNow;
@@ -52,16 +54,14 @@ const HomePage = () => {
         ? nowPlaying
         : favorites;
 
-  const prevPageRef = useRef(currentPage);
-
   useEffect(() => {
-    const isPageChange = prevPageRef.current !== currentPage;
+    if (prevPageRef.current === currentPage) return;
     prevPageRef.current = currentPage;
-    if (isPageChange && isPaginatedCategory && movies.length > 0) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      const timer = setTimeout(() => setFocus(`movie-${movies[0].id}`), 100);
-      return () => clearTimeout(timer);
-    }
+    if (!isPaginatedCategory || !movies.length) return;
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    const t = setTimeout(() => setFocus(`movie-${movies[0].id}`), 150);
+    return () => clearTimeout(t);
   }, [currentPage, isPaginatedCategory, movies]);
 
   if (error) {
@@ -82,6 +82,7 @@ const HomePage = () => {
 
   const emptyText = hasSearchQuery ? 'No results found' : 'No movies to show';
   const handleSelectCategory = (category: Category) => {
+    if (category === activeCategory && !hasSearchQuery) return;
     dispatch(searchClear());
     setActiveCategory(category);
   };
