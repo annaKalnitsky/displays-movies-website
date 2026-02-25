@@ -2,6 +2,13 @@
   padding: var(--space-md);
 }
 
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
 .content {
   display: flex;
   gap: var(--space-lg);

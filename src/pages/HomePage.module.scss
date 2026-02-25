@@ -13,7 +13,13 @@
   color: var(--color-text);
 }
 
-.loading,
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
 .error {
   color: var(--color-text);
   font-size: var(--font-size-lg);

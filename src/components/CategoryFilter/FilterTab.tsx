@@ -22,7 +22,6 @@ export const FilterTab = ({ category, label, isActive, onSelect }: FilterTabProp
       role="tab"
       aria-selected={isActive}
       className={`${styles.tab} ${isActive ? styles.active : ''} ${focused ? styles.focused : ''}`}
-      onClick={() => onSelect(category)}
       tabIndex={-1}
     >
       {label}

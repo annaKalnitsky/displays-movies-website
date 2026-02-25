@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { MovieCard } from '../components/MovieCard/MovieCard';
 import CategoryFilter from '../components/CategoryFilter/CategoryFilter';
+import { Spinner } from '../components/Spinner/Spinner';
 import { Pagination } from '../components/Pagination/Pagination';
 import { fetchPopularRequest, fetchNowPlayingRequest, searchClear } from '../store/slices/moviesSlice';
 import type { RootState } from '../store';
@@ -97,7 +98,9 @@ const HomePage = () => {
         </header>
 
         {isLoading && movies.length === 0 ? (
-          <p className={styles.loading}>Loading...</p>
+          <div className={styles.loading}>
+            <Spinner size={48} />
+          </div>
         ) : movies.length === 0 ? (
           <p className={styles.empty}>No movies to show</p>
         ) : (

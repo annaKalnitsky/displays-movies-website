@@ -17,14 +17,11 @@ export const MovieCard = ({ movie, onSelect }: MovieCardProps) => {
   const posterUrl = getPosterUrl(movie.poster_path);
   const year = movie.release_date ? new Date(movie.release_date).getFullYear() : '';
 
-  const handleSelect = () => onSelect?.(movie);
-
   return (
     <article
       ref={ref}
       className={`${styles.movieCard} ${focused ? styles.focused : ''}`}
       tabIndex={-1}
-      onClick={handleSelect}
     >
       <img
         className={styles.poster}

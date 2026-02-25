@@ -13,7 +13,7 @@
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
-  cursor: pointer;
+  pointer-events: none;
   outline: none;
   transition: color 0.2s ease;
 

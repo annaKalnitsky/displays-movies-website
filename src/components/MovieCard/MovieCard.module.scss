@@ -3,6 +3,7 @@
   border-radius: var(--radius-sm);
   overflow: hidden;
   outline: none;
+  pointer-events: none;
   transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
 
   &.focused {
