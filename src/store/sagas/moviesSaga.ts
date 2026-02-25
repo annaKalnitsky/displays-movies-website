@@ -9,8 +9,10 @@ import {
   searchRequest,
   searchSuccess,
   searchFailure,
+  fetchMovieDetailsSuccess,
+  fetchMovieDetailsFailure,
 } from '../slices/moviesSlice';
-import { fetchPopularMovies, fetchNowPlayingMovies, searchMovies } from '../../services/tmdbApi';
+import { fetchPopularMovies, fetchNowPlayingMovies, searchMovies, fetchMovieDetails } from '../../services/tmdbApi';
 
 const DEBOUNCE_MS = 500;
 const MIN_SEARCH_LENGTH = 2;
@@ -67,8 +69,24 @@ function* searchInputChangeSaga(action: { type: string; payload?: { query: strin
   }
 }
 
+function* fetchMovieDetailsSaga(action: { type: string; payload?: number }): SagaIterator {
+  const movieId = action.payload;
+  if (movieId == null || isNaN(movieId)) {
+    yield put(fetchMovieDetailsFailure('Invalid movie ID'));
+    return;
+  }
+
+  try {
+    const data = yield call(fetchMovieDetails, movieId);
+    yield put(fetchMovieDetailsSuccess(data));
+  } catch (error) {
+    yield put(fetchMovieDetailsFailure(error instanceof Error ? error.message : 'Failed to load'));
+  }
+}
+
 export function* moviesSaga() {
   yield takeLatest(MOVIES_ACTIONS.FETCH_POPULAR_REQUEST, fetchPopularSaga);
   yield takeLatest(MOVIES_ACTIONS.FETCH_NOW_PLAYING_REQUEST, fetchNowPlayingSaga);
+  yield takeLatest(MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_REQUEST, fetchMovieDetailsSaga);
   yield debounce(DEBOUNCE_MS, MOVIES_ACTIONS.SEARCH_INPUT_CHANGE, searchInputChangeSaga);
 }

@@ -18,6 +18,9 @@ export interface MoviesState {
   totalPages: number;
   isLoading: boolean;
   error: string | null;
+  movieDetails: Movie | null;
+  movieDetailsLoading: boolean;
+  movieDetailsError: string | null;
 };
 
 const initialState: MoviesState = {
@@ -29,6 +32,9 @@ const initialState: MoviesState = {
   totalPages: 1,
   isLoading: false,
   error: null,
+  movieDetails: null,
+  movieDetailsLoading: false,
+  movieDetailsError: null,
 };
 
 export const MOVIES_ACTIONS = {
@@ -43,6 +49,9 @@ export const MOVIES_ACTIONS = {
   SEARCH_SUCCESS: 'movies/searchSuccess',
   SEARCH_FAILURE: 'movies/searchFailure',
   SEARCH_CLEAR: 'movies/searchClear',
+  FETCH_MOVIE_DETAILS_REQUEST: 'movies/fetchMovieDetailsRequest',
+  FETCH_MOVIE_DETAILS_SUCCESS: 'movies/fetchMovieDetailsSuccess',
+  FETCH_MOVIE_DETAILS_FAILURE: 'movies/fetchMovieDetailsFailure',
 } as const;
 
 export function fetchPopularRequest(page?: number) {
@@ -79,6 +88,18 @@ export function searchRequest(payload: { query: string; page?: number }) {
 
 export function searchClear() {
   return { type: MOVIES_ACTIONS.SEARCH_CLEAR };
+}
+
+export function fetchMovieDetailsRequest(movieId: number) {
+  return { type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_REQUEST, payload: movieId };
+}
+
+export function fetchMovieDetailsSuccess(movie: Movie) {
+  return { type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_SUCCESS, payload: movie };
+}
+
+export function fetchMovieDetailsFailure(error: string) {
+  return { type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_FAILURE, payload: error };
 }
 
 export function searchSuccess(data: { results: Movie[]; page: number; total_pages: number }) {
@@ -143,6 +164,24 @@ export function moviesReducer(state = initialState, action: { type: string; payl
 
     case MOVIES_ACTIONS.SEARCH_CLEAR:
       return { ...state, searchResults: [], searchQuery: '', isLoading: false };
+
+    case MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_REQUEST:
+      return { ...state, movieDetailsLoading: true, movieDetailsError: null };
+
+    case MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_SUCCESS:
+      return {
+        ...state,
+        movieDetails: action.payload as Movie,
+        movieDetailsLoading: false,
+        movieDetailsError: null,
+      };
+
+    case MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_FAILURE:
+      return {
+        ...state,
+        movieDetailsLoading: false,
+        movieDetailsError: (action.payload as string) || 'Failed to load',
+      };
 
     case MOVIES_ACTIONS.FETCH_POPULAR_FAILURE:
     case MOVIES_ACTIONS.FETCH_NOW_PLAYING_FAILURE:

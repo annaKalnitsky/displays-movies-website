@@ -1,0 +1,19 @@
+.favoriteButton {
+  display: inline-block;
+  padding: 10px 16px;
+  margin-bottom: var(--space-md);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text);
+  font-size: var(--font-size-base);
+  outline: none;
+
+  &.favoriteActive {
+    color: #ffd54a;
+  }
+
+  &.focused {
+    border-color: #ffffff;
+  }
+}

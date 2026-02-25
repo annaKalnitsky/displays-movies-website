@@ -18,12 +18,18 @@ const HomePage = () => {
   const [activeCategory, setActiveCategory] = useState<Category>(Category.Popular);
 
   const hasSearchQuery = Boolean(searchQuery?.trim());
+  const isPaginatedCategory = activeCategory === Category.Popular || activeCategory === Category.AiringNow;
 
-  const { ref, focusKey } = useFocusable({
+  const { ref, focusKey, focusSelf } = useFocusable({
     focusKey: 'home-page',
     focusable: false,
     trackChildren: true,
+    preferredChildFocusKey: 'filter-row',
   });
+
+  useEffect(() => {
+    focusSelf();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (activeCategory === Category.Popular) {
@@ -44,23 +50,14 @@ const HomePage = () => {
   const prevPageRef = useRef(currentPage);
 
   useEffect(() => {
-    const timer = setTimeout(() => setFocus('filter-popular'), 100);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
     const isPageChange = prevPageRef.current !== currentPage;
     prevPageRef.current = currentPage;
-    if (
-      isPageChange &&
-      (activeCategory === Category.Popular || activeCategory === Category.AiringNow) &&
-      movies.length > 0
-    ) {
+    if (isPageChange && isPaginatedCategory && movies.length > 0) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       const timer = setTimeout(() => setFocus(`movie-${movies[0].id}`), 100);
       return () => clearTimeout(timer);
     }
-  }, [currentPage, activeCategory, movies]);
+  }, [currentPage, isPaginatedCategory, movies]);
 
   if (error) {
     return (
@@ -71,17 +68,22 @@ const HomePage = () => {
   }
 
   const categoryTitle = hasSearchQuery
-    ? `Search: ${searchQuery}`
+    ? 'Search'
     : activeCategory === Category.Popular
       ? 'Popular'
       : activeCategory === Category.AiringNow
         ? 'Airing Now'
         : 'My Favorites';
 
+  const handlePageSelect = (page: number) =>
+    activeCategory === Category.Popular ? dispatch(fetchPopularRequest(page)) : dispatch(fetchNowPlayingRequest(page));
+
   const openMovieWindow = (movieId: number) => {
     const url = `${window.location.origin}/movie/${movieId}`;
-    const features = 'popup=yes,noopener,noreferrer';
-
+    const width = 900;
+    const height = 600;
+    const center = (outer: number, inner: number) => Math.round((outer - inner) / 2);
+    const features = `popup=yes,width=${width},height=${height},left=${center(window.screen.width, width)},top=${center(window.screen.height, height)}`;
     const win = window.open(url, `movie-${movieId}`, features);
     win?.focus();
   };
@@ -105,22 +107,16 @@ const HomePage = () => {
                 <MovieCard
                   key={movie.id}
                   movie={movie}
-                  onSelect={(m) => openMovieWindow(m.id)}
+                  onSelect={() => openMovieWindow(movie.id)}
                 />
               ))}
             </div>
-            {(activeCategory === Category.Popular || activeCategory === Category.AiringNow) && totalPages > 1 && (
+            {isPaginatedCategory && totalPages > 1 && (
               <Pagination
                 key={activeCategory}
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageSelect={(page) => {
-                  if (activeCategory === Category.Popular) {
-                    dispatch(fetchPopularRequest(page));
-                  } else {
-                    dispatch(fetchNowPlayingRequest(page));
-                  }
-                }}
+                onPageSelect={handlePageSelect}
               />
             )}
           </>

@@ -1,6 +1,7 @@
 import type { Movie } from './moviesSlice';
 
-const STORAGE_KEY = 'tmdb_favorites';
+export const FAVORITES_STORAGE_KEY = 'tmdb_favorites';
+const STORAGE_KEY = FAVORITES_STORAGE_KEY;
 
 function loadFromStorage(): Movie[] {
   try {
@@ -22,6 +23,7 @@ const initialState: FavoritesState = {
 export const FAVORITES_ACTIONS = {
   ADD: 'favorites/add',
   REMOVE: 'favorites/remove',
+  RELOAD: 'favorites/reload',
 } as const;
 
 function saveToStorage(items: Movie[]) {
@@ -38,6 +40,10 @@ export function addToFavorites(movie: Movie) {
 
 export function removeFromFavorites(movieId: number) {
   return { type: FAVORITES_ACTIONS.REMOVE, payload: movieId };
+}
+
+export function reloadFavoritesFromStorage() {
+  return { type: FAVORITES_ACTIONS.RELOAD };
 }
 
 export function favoritesReducer(state = initialState, action: { type: string; payload?: unknown }): FavoritesState {
@@ -57,6 +63,9 @@ export function favoritesReducer(state = initialState, action: { type: string; p
       saveToStorage(items);
       return { items };
     }
+
+    case FAVORITES_ACTIONS.RELOAD:
+      return { items: loadFromStorage() };
 
     default:
       return state;
