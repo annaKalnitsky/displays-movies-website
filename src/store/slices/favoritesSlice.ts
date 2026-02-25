@@ -1,23 +1,22 @@
-import type { Movie } from './moviesSlice';
-
 export const FAVORITES_STORAGE_KEY = 'tmdb_favorites';
 const STORAGE_KEY = FAVORITES_STORAGE_KEY;
 
-function loadFromStorage(): Movie[] {
+function loadFromStorage(): number[] {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((x) => (typeof x === 'number' ? x : (x as { id: number }).id));
   } catch {
     return [];
   }
 }
 
 export interface FavoritesState {
-  items: Movie[];
-};
+  ids: number[];
+}
 
 const initialState: FavoritesState = {
-  items: loadFromStorage(),
+  ids: loadFromStorage(),
 };
 
 export const FAVORITES_ACTIONS = {
@@ -26,48 +25,42 @@ export const FAVORITES_ACTIONS = {
   RELOAD: 'favorites/reload',
 } as const;
 
-function saveToStorage(items: Movie[]) {
+function saveToStorage(ids: number[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
   } catch {
     // ignore
   }
 }
 
-export function addToFavorites(movie: Movie) {
-  return { type: FAVORITES_ACTIONS.ADD, payload: movie };
-}
+export const addToFavorites = (movieId: number) => ({ type: FAVORITES_ACTIONS.ADD, payload: movieId });
 
-export function removeFromFavorites(movieId: number) {
-  return { type: FAVORITES_ACTIONS.REMOVE, payload: movieId };
-}
+export const removeFromFavorites = (movieId: number) => ({ type: FAVORITES_ACTIONS.REMOVE, payload: movieId });
 
-export function reloadFavoritesFromStorage() {
-  return { type: FAVORITES_ACTIONS.RELOAD };
-}
+export const reloadFavoritesFromStorage = () => ({ type: FAVORITES_ACTIONS.RELOAD });
 
-export function favoritesReducer(state = initialState, action: { type: string; payload?: unknown }): FavoritesState {
+export const favoritesReducer = (state = initialState, action: { type: string; payload?: unknown }): FavoritesState => {
   switch (action.type) {
     case FAVORITES_ACTIONS.ADD: {
-      const movie = action.payload as Movie;
-      if (state.items.some((m) => m.id === movie.id)) return state;
-      const items = [...state.items, movie];
-      saveToStorage(items);
-      return { items };
+      const movieId = action.payload as number;
+      if (state.ids.includes(movieId)) return state;
+      const ids = [...state.ids, movieId];
+      saveToStorage(ids);
+      return { ids };
     }
 
     case FAVORITES_ACTIONS.REMOVE: {
       const movieId = action.payload as number;
-      const items = state.items.filter((m) => m.id !== movieId);
-      if (items.length === state.items.length) return state;
-      saveToStorage(items);
-      return { items };
+      const ids = state.ids.filter((id) => id !== movieId);
+      if (ids.length === state.ids.length) return state;
+      saveToStorage(ids);
+      return { ids };
     }
 
     case FAVORITES_ACTIONS.RELOAD:
-      return { items: loadFromStorage() };
+      return { ids: loadFromStorage() };
 
     default:
       return state;
   }
-}
+};

@@ -21,7 +21,8 @@ export interface MoviesState {
   movieDetails: Movie | null;
   movieDetailsLoading: boolean;
   movieDetailsError: string | null;
-};
+  movieDetailsById: Record<number, Movie>;
+}
 
 const initialState: MoviesState = {
   popular: [],
@@ -35,6 +36,7 @@ const initialState: MoviesState = {
   movieDetails: null,
   movieDetailsLoading: false,
   movieDetailsError: null,
+  movieDetailsById: {},
 };
 
 export const MOVIES_ACTIONS = {
@@ -52,65 +54,48 @@ export const MOVIES_ACTIONS = {
   FETCH_MOVIE_DETAILS_REQUEST: 'movies/fetchMovieDetailsRequest',
   FETCH_MOVIE_DETAILS_SUCCESS: 'movies/fetchMovieDetailsSuccess',
   FETCH_MOVIE_DETAILS_FAILURE: 'movies/fetchMovieDetailsFailure',
+  CACHE_MOVIE_DETAILS: 'movies/cacheMovieDetails',
 } as const;
 
-export function fetchPopularRequest(page?: number) {
-  return { type: MOVIES_ACTIONS.FETCH_POPULAR_REQUEST, payload: page };
-}
+export const fetchPopularRequest = (page?: number) => ({ type: MOVIES_ACTIONS.FETCH_POPULAR_REQUEST, payload: page });
 
-export function fetchPopularSuccess(data: { results: Movie[]; page: number; total_pages: number }) {
-  return { type: MOVIES_ACTIONS.FETCH_POPULAR_SUCCESS, payload: data };
-}
+export const fetchPopularSuccess = (data: { results: Movie[]; page: number; total_pages: number }) =>
+  ({ type: MOVIES_ACTIONS.FETCH_POPULAR_SUCCESS, payload: data });
 
-export function fetchPopularFailure(error: string) {
-  return { type: MOVIES_ACTIONS.FETCH_POPULAR_FAILURE, payload: error };
-}
+export const fetchPopularFailure = (error: string) => ({ type: MOVIES_ACTIONS.FETCH_POPULAR_FAILURE, payload: error });
 
-export function fetchNowPlayingRequest(page?: number) {
-  return { type: MOVIES_ACTIONS.FETCH_NOW_PLAYING_REQUEST, payload: page };
-}
+export const fetchNowPlayingRequest = (page?: number) =>
+  ({ type: MOVIES_ACTIONS.FETCH_NOW_PLAYING_REQUEST, payload: page });
 
-export function fetchNowPlayingSuccess(data: { results: Movie[]; page: number; total_pages: number }) {
-  return { type: MOVIES_ACTIONS.FETCH_NOW_PLAYING_SUCCESS, payload: data };
-}
+export const fetchNowPlayingSuccess = (data: { results: Movie[]; page: number; total_pages: number }) =>
+  ({ type: MOVIES_ACTIONS.FETCH_NOW_PLAYING_SUCCESS, payload: data });
 
-export function fetchNowPlayingFailure(error: string) {
-  return { type: MOVIES_ACTIONS.FETCH_NOW_PLAYING_FAILURE, payload: error };
-}
+export const fetchNowPlayingFailure = (error: string) =>
+  ({ type: MOVIES_ACTIONS.FETCH_NOW_PLAYING_FAILURE, payload: error });
 
-export function searchInputChange(query: string) {
-  return { type: MOVIES_ACTIONS.SEARCH_INPUT_CHANGE, payload: { query } };
-}
+export const searchInputChange = (query: string) => ({ type: MOVIES_ACTIONS.SEARCH_INPUT_CHANGE, payload: { query } });
 
-export function searchRequest(payload: { query: string; page?: number }) {
-  return { type: MOVIES_ACTIONS.SEARCH_REQUEST, payload };
-}
+export const searchRequest = (payload: { query: string; page?: number }) => ({ type: MOVIES_ACTIONS.SEARCH_REQUEST, payload });
 
-export function searchClear() {
-  return { type: MOVIES_ACTIONS.SEARCH_CLEAR };
-}
+export const searchClear = () => ({ type: MOVIES_ACTIONS.SEARCH_CLEAR });
 
-export function fetchMovieDetailsRequest(movieId: number) {
-  return { type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_REQUEST, payload: movieId };
-}
+export const fetchMovieDetailsRequest = (movieId: number) =>
+  ({ type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_REQUEST, payload: movieId });
 
-export function fetchMovieDetailsSuccess(movie: Movie) {
-  return { type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_SUCCESS, payload: movie };
-}
+export const fetchMovieDetailsSuccess = (movie: Movie) =>
+  ({ type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_SUCCESS, payload: movie });
 
-export function fetchMovieDetailsFailure(error: string) {
-  return { type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_FAILURE, payload: error };
-}
+export const fetchMovieDetailsFailure = (error: string) =>
+  ({ type: MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_FAILURE, payload: error });
 
-export function searchSuccess(data: { results: Movie[]; page: number; total_pages: number }) {
-  return { type: MOVIES_ACTIONS.SEARCH_SUCCESS, payload: data };
-}
+export const cacheMovieDetails = (movie: Movie) => ({ type: MOVIES_ACTIONS.CACHE_MOVIE_DETAILS, payload: movie });
 
-export function searchFailure(error: string) {
-  return { type: MOVIES_ACTIONS.SEARCH_FAILURE, payload: error };
-}
+export const searchSuccess = (data: { results: Movie[]; page: number; total_pages: number }) =>
+  ({ type: MOVIES_ACTIONS.SEARCH_SUCCESS, payload: data });
 
-export function moviesReducer(state = initialState, action: { type: string; payload?: unknown }): MoviesState {
+export const searchFailure = (error: string) => ({ type: MOVIES_ACTIONS.SEARCH_FAILURE, payload: error });
+
+export const moviesReducer = (state = initialState, action: { type: string; payload?: unknown }): MoviesState => {
   switch (action.type) {
     case MOVIES_ACTIONS.FETCH_POPULAR_REQUEST:
     case MOVIES_ACTIONS.FETCH_NOW_PLAYING_REQUEST:
@@ -155,26 +140,43 @@ export function moviesReducer(state = initialState, action: { type: string; payl
 
     case MOVIES_ACTIONS.SEARCH_INPUT_CHANGE: {
       const query = (action.payload as { query: string })?.query ?? '';
+      const trimmed = query.trim();
       return {
         ...state,
         searchQuery: query,
-        ...(query.trim().length === 0 && { searchResults: [] }),
+        ...(trimmed.length < 2 && {
+          searchResults: [],
+          currentPage: 1,
+          totalPages: 1,
+          isLoading: false,
+        }),
       };
     }
 
     case MOVIES_ACTIONS.SEARCH_CLEAR:
-      return { ...state, searchResults: [], searchQuery: '', isLoading: false };
+      return { ...state, searchResults: [], searchQuery: '', currentPage: 1, totalPages: 1, isLoading: false };
 
     case MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_REQUEST:
       return { ...state, movieDetailsLoading: true, movieDetailsError: null };
 
-    case MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_SUCCESS:
+    case MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_SUCCESS: {
+      const movie = action.payload as Movie;
       return {
         ...state,
-        movieDetails: action.payload as Movie,
+        movieDetails: movie,
         movieDetailsLoading: false,
         movieDetailsError: null,
+        movieDetailsById: { ...state.movieDetailsById, [movie.id]: movie },
       };
+    }
+
+    case MOVIES_ACTIONS.CACHE_MOVIE_DETAILS: {
+      const movie = action.payload as Movie;
+      return {
+        ...state,
+        movieDetailsById: { ...state.movieDetailsById, [movie.id]: movie },
+      };
+    }
 
     case MOVIES_ACTIONS.FETCH_MOVIE_DETAILS_FAILURE:
       return {
@@ -195,4 +197,4 @@ export function moviesReducer(state = initialState, action: { type: string; payl
     default:
       return state;
   }
-}
+};

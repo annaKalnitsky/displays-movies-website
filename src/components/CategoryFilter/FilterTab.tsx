@@ -6,13 +6,17 @@ interface FilterTabProps {
   category: Category;
   label: string;
   isActive: boolean;
-  onSelect: (category: Category) => void;
+  onSelectNow: (category: Category) => void;
+  onFocusDelayed: (category: Category) => void;
+  onBlur: () => void;
 }
 
-export const FilterTab = ({ category, label, isActive, onSelect }: FilterTabProps) => {
+export const FilterTab = ({ category, label, isActive, onSelectNow, onFocusDelayed, onBlur }: FilterTabProps) => {
   const { ref, focused } = useFocusable({
     focusKey: `filter-${category}`,
-    onEnterPress: () => onSelect(category),
+    onEnterPress: () => onSelectNow(category),
+    onFocus: () => onFocusDelayed(category),
+    onBlur,
   });
 
   return (
@@ -23,6 +27,7 @@ export const FilterTab = ({ category, label, isActive, onSelect }: FilterTabProp
       aria-selected={isActive}
       className={`${styles.tab} ${isActive ? styles.active : ''} ${focused ? styles.focused : ''}`}
       tabIndex={-1}
+      onClick={() => onSelectNow(category)}
     >
       {label}
     </button>

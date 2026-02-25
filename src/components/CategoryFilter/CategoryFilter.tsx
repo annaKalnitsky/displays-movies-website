@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef } from 'react';
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation';
 import { Category } from '../../constants/category';
 import { FilterTab } from './FilterTab';
@@ -16,6 +17,39 @@ interface CategoryFilterProps {
 }
 
 const CategoryFilter = ({ activeCategory, onSelect }: CategoryFilterProps) => {
+  const timerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current == null) return;
+    window.clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }, []);
+
+  useEffect(() => clearTimer, [clearTimer]);
+  useEffect(() => clearTimer(), [activeCategory, clearTimer]);
+
+  const selectNow = useCallback(
+    (category: Category) => {
+      if (category === activeCategory) return;
+      clearTimer();
+      onSelect(category);
+    },
+    [activeCategory, clearTimer, onSelect]
+  );
+
+  const scheduleSelect = useCallback(
+    (category: Category) => {
+      if (category === activeCategory) return;
+      clearTimer();
+      timerRef.current = window.setTimeout(() => {
+        if (category === activeCategory) return;
+        onSelect(category);
+        timerRef.current = null;
+      }, 2000);
+    },
+    [activeCategory, clearTimer, onSelect]
+  );
+
   const { ref: navRef } = useFocusable({
     focusKey: 'filter-row',
     focusable: false,
@@ -30,7 +64,9 @@ const CategoryFilter = ({ activeCategory, onSelect }: CategoryFilterProps) => {
           category={tab.key}
           label={tab.label}
           isActive={activeCategory === tab.key}
-          onSelect={onSelect}
+          onSelectNow={selectNow}
+          onFocusDelayed={scheduleSelect}
+          onBlur={clearTimer}
         />
       ))}
       <SearchBar />

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
-import { fetchPopularRequest, fetchNowPlayingRequest, searchClear } from '../../store/slices/moviesSlice';
-import type { RootState } from '../../store';
+import { fetchPopularRequest, fetchNowPlayingRequest, fetchMovieDetailsRequest, searchClear } from '../../store/slices/moviesSlice';
+import { selectFavoriteMovies, type RootState } from '../../store';
 import { Category } from '../../constants/category';
 import { HomeHeader } from './components/HomeHeader';
 import { HomeContent } from './components/HomeContent';
@@ -13,7 +13,9 @@ const HomePage = () => {
   const { popular, nowPlaying, searchResults, searchQuery, isLoading, error, currentPage, totalPages } = useSelector(
     (state: RootState) => state.movies
   );
-  const favorites = useSelector((state: RootState) => state.favorites.items);
+  const favorites = useSelector(selectFavoriteMovies);
+  const favoriteIds = useSelector((state: RootState) => state.favorites.ids);
+  const movieDetailsById = useSelector((state: RootState) => state.movies.movieDetailsById);
   const [activeCategory, setActiveCategory] = useState<Category>(Category.Popular);
 
   const hasSearchQuery = Boolean(searchQuery?.trim());
@@ -31,12 +33,16 @@ const HomePage = () => {
   }, [focusSelf]);
 
   useEffect(() => {
-    if (activeCategory === Category.Popular) {
-      dispatch(fetchPopularRequest(1));
-    } else if (activeCategory === Category.AiringNow) {
-      dispatch(fetchNowPlayingRequest(1));
-    }
+    if (activeCategory === Category.Popular) dispatch(fetchPopularRequest(1));
+    else if (activeCategory === Category.AiringNow) dispatch(fetchNowPlayingRequest(1));
   }, [activeCategory, dispatch]);
+
+  useEffect(() => {
+    if (activeCategory !== Category.Favorites) return;
+    favoriteIds.forEach((id: number) => {
+      if (!movieDetailsById[id]) dispatch(fetchMovieDetailsRequest(id));
+    });
+  }, [activeCategory, favoriteIds, movieDetailsById, dispatch]);
 
   const movies = hasSearchQuery
     ? searchResults

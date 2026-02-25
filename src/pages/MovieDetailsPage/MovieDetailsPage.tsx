@@ -6,6 +6,7 @@ import getPosterUrl from '../../utils/imageUrl';
 import type { RootState } from '../../store';
 import { fetchMovieDetailsRequest, fetchMovieDetailsFailure } from '../../store/slices/moviesSlice';
 import { addToFavorites, removeFromFavorites } from '../../store/slices/favoritesSlice';
+import { cacheMovieDetails } from '../../store/slices/moviesSlice';
 import { FavoriteButton } from '../../components/FavoriteButton/FavoriteButton';
 import { Spinner } from '../../components/Spinner/Spinner';
 import { KeyCode } from '../../constants/keyCode';
@@ -16,8 +17,8 @@ const MovieDetailsPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { movieDetails, movieDetailsLoading, movieDetailsError } = useSelector((state: RootState) => state.movies);
-  const favorites = useSelector((state: RootState) => state.favorites.items);
-  const isFavorite = movieDetails ? favorites.some((m) => m.id === movieDetails.id) : false;
+  const favoriteIds = useSelector((state: RootState) => state.favorites.ids);
+  const isFavorite = movieDetails ? favoriteIds.includes(movieDetails.id) : false;
   const loadedMovieId = movieDetails?.id;
 
   const toggleFavorite = () => {
@@ -25,7 +26,8 @@ const MovieDetailsPage = () => {
     if (isFavorite) {
       dispatch(removeFromFavorites(movieDetails.id));
     } else {
-      dispatch(addToFavorites(movieDetails));
+      dispatch(cacheMovieDetails(movieDetails));
+      dispatch(addToFavorites(movieDetails.id));
     }
   };
 

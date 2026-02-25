@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import type { Movie } from './slices/moviesSlice';
 import createSagaMiddleware from 'redux-saga';
 import { moviesReducer } from './slices/moviesSlice';
 import { favoritesReducer, reloadFavoritesFromStorage, FAVORITES_STORAGE_KEY } from './slices/favoritesSlice';
@@ -22,3 +23,9 @@ window.addEventListener('storage', (e) => {
 });
 
 export type RootState = ReturnType<typeof store.getState>;
+
+export const selectFavoriteMovies = (state: RootState): Movie[] => {
+  const { ids } = state.favorites;
+  const { movieDetailsById } = state.movies;
+  return ids.map((id) => movieDetailsById[id]).filter((m): m is Movie => Boolean(m));
+};

@@ -19,7 +19,7 @@ const KEY_TO_DIRECTION: Record<string, ArrowDirection> = {
   [KeyCode.ArrowDown]: 'down',
 };
 
-export function useInputSpatialNav(getFocusTarget: (direction: ArrowDirection) => string) {
+export const useInputSpatialNav = (getFocusTarget: (direction: ArrowDirection) => string) => {
   const onKeyDownCapture = useCallback(
     (e: KeyboardEvent) => {
       if (!ARROW_KEYS.includes(e.key)) return;
@@ -35,5 +35,5 @@ export function useInputSpatialNav(getFocusTarget: (direction: ArrowDirection) =
   );
 
   return { onKeyDownCapture };
-}
+};
 
