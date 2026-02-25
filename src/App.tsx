@@ -23,16 +23,6 @@ const App = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const onMessage = (e: MessageEvent) => {
-      if (e.data === 'close-movie-popup' && e.source && typeof (e.source as Window).close === 'function') {
-        (e.source as Window).close();
-      }
-    };
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, []);
-
   return (
     <BrowserRouter>
       <Routes>

@@ -1,4 +1,4 @@
-import { call, put, takeLatest, debounce } from 'redux-saga/effects';
+import { call, put, takeLatest, debounce, delay } from 'redux-saga/effects';
 import type { SagaIterator } from 'redux-saga';
 import {
   MOVIES_ACTIONS,
@@ -16,6 +16,9 @@ import { fetchPopularMovies, fetchNowPlayingMovies, searchMovies, fetchMovieDeta
 
 const DEBOUNCE_MS = 500;
 const MIN_SEARCH_LENGTH = 2;
+const SEARCH_MIN_INTERVAL_MS = 2000; // 5 requests per 10 seconds
+
+let lastSearchTime = 0;
 
 function* fetchPopularSaga(action: { type: string; payload?: number }): SagaIterator {
   try {
@@ -54,6 +57,10 @@ function* searchInputChangeSaga(action: { type: string; payload?: { query: strin
   if (query.length < MIN_SEARCH_LENGTH) return;
 
   yield put(searchRequest({ query }));
+
+  const waitMs = SEARCH_MIN_INTERVAL_MS - (Date.now() - lastSearchTime);
+  if (waitMs > 0) yield delay(waitMs);
+  lastSearchTime = Date.now();
 
   try {
     const data = yield call(searchMovies, query, 1);

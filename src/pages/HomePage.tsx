@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { MovieCard } from '../components/MovieCard/MovieCard';
 import CategoryFilter from '../components/CategoryFilter/CategoryFilter';
 import { Pagination } from '../components/Pagination/Pagination';
-import { fetchPopularRequest, fetchNowPlayingRequest } from '../store/slices/moviesSlice';
+import { fetchPopularRequest, fetchNowPlayingRequest, searchClear } from '../store/slices/moviesSlice';
 import type { RootState } from '../store';
 import { Category } from '../constants/category';
 import styles from './HomePage.module.scss';
 
 const HomePage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { popular, nowPlaying, searchResults, searchQuery, isLoading, error, currentPage, totalPages } = useSelector(
     (state: RootState) => state.movies
   );
@@ -29,7 +31,7 @@ const HomePage = () => {
 
   useEffect(() => {
     focusSelf();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (activeCategory === Category.Popular) {
@@ -78,22 +80,20 @@ const HomePage = () => {
   const handlePageSelect = (page: number) =>
     activeCategory === Category.Popular ? dispatch(fetchPopularRequest(page)) : dispatch(fetchNowPlayingRequest(page));
 
-  const openMovieWindow = (movieId: number) => {
-    const url = `${window.location.origin}/movie/${movieId}`;
-    const width = 900;
-    const height = 600;
-    const center = (outer: number, inner: number) => Math.round((outer - inner) / 2);
-    const features = `popup=yes,width=${width},height=${height},left=${center(window.screen.width, width)},top=${center(window.screen.height, height)}`;
-    const win = window.open(url, `movie-${movieId}`, features);
-    win?.focus();
-  };
+  const openMovie = (movieId: number) => navigate(`/movie/${movieId}`);
 
   return (
     <FocusContext.Provider value={focusKey}>
       <div ref={ref} className={styles.homePage}>
         <header className={styles.header}>
           <h1 className={styles.title}>{categoryTitle}</h1>
-          <CategoryFilter activeCategory={activeCategory} onSelect={setActiveCategory} />
+          <CategoryFilter
+            activeCategory={activeCategory}
+            onSelect={(category) => {
+              dispatch(searchClear());
+              setActiveCategory(category);
+            }}
+          />
         </header>
 
         {isLoading && movies.length === 0 ? (
@@ -107,7 +107,7 @@ const HomePage = () => {
                 <MovieCard
                   key={movie.id}
                   movie={movie}
-                  onSelect={() => openMovieWindow(movie.id)}
+                  onSelect={() => openMovie(movie.id)}
                 />
               ))}
             </div>

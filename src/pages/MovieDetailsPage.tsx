@@ -46,11 +46,7 @@ const MovieDetailsPage = () => {
       if (e.key === KeyCode.Escape) {
         e.preventDefault();
         e.stopPropagation();
-        if (window.opener) {
-          window.opener.postMessage('close-movie-popup', '*');
-        } else {
-          navigate(-1);
-        }
+        navigate(-1);
       }
     };
     window.addEventListener('keydown', handleKeyDown, true);
