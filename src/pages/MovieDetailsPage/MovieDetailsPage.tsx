@@ -2,12 +2,13 @@ import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusable, FocusContext } from '@noriginmedia/norigin-spatial-navigation';
-import getPosterUrl from '../utils/imageUrl';
-import type { RootState } from '../store';
-import { fetchMovieDetailsRequest, fetchMovieDetailsFailure } from '../store/slices/moviesSlice';
-import { addToFavorites, removeFromFavorites } from '../store/slices/favoritesSlice';
-import { FavoriteButton } from '../components/FavoriteButton/FavoriteButton';
-import { KeyCode } from '../constants/keyCode';
+import getPosterUrl from '../../utils/imageUrl';
+import type { RootState } from '../../store';
+import { fetchMovieDetailsRequest, fetchMovieDetailsFailure } from '../../store/slices/moviesSlice';
+import { addToFavorites, removeFromFavorites } from '../../store/slices/favoritesSlice';
+import { FavoriteButton } from '../../components/FavoriteButton/FavoriteButton';
+import { Spinner } from '../../components/Spinner/Spinner';
+import { KeyCode } from '../../constants/keyCode';
 import styles from './MovieDetailsPage.module.scss';
 
 const MovieDetailsPage = () => {
@@ -17,6 +18,7 @@ const MovieDetailsPage = () => {
   const { movieDetails, movieDetailsLoading, movieDetailsError } = useSelector((state: RootState) => state.movies);
   const favorites = useSelector((state: RootState) => state.favorites.items);
   const isFavorite = movieDetails ? favorites.some((m) => m.id === movieDetails.id) : false;
+  const loadedMovieId = movieDetails?.id;
 
   const toggleFavorite = () => {
     if (!movieDetails) return;
@@ -34,15 +36,12 @@ const MovieDetailsPage = () => {
       dispatch(fetchMovieDetailsFailure('Invalid movie ID'));
       return;
     }
+    if (loadedMovieId === movieId) return;
     dispatch(fetchMovieDetailsRequest(movieId));
-  }, [id, dispatch]);
+  }, [id, dispatch, loadedMovieId]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === KeyCode.Tab) {
-        e.preventDefault();
-        return;
-      }
       if (e.key === KeyCode.Escape) {
         e.preventDefault();
         e.stopPropagation();
@@ -64,8 +63,20 @@ const MovieDetailsPage = () => {
     if (movieDetails) focusSelf();
   }, [movieDetails, focusSelf]);
 
-  if (movieDetailsLoading) return <div className={styles.page}>Loading...</div>;
-  if (movieDetailsError || !movieDetails) return <div className={styles.page}>{movieDetailsError || 'Movie not found'}</div>;
+  if (movieDetailsLoading)
+    return (
+      <div className={styles.page}>
+        <div className={styles.loading}>
+          <Spinner size={48} />
+        </div>
+      </div>
+    );
+  if (movieDetailsError || !movieDetails)
+    return (
+      <div className={styles.page}>
+        {movieDetailsError || 'Movie not found'}
+      </div>
+    );
 
   const year = movieDetails.release_date ? new Date(movieDetails.release_date).getFullYear() : '';
 
@@ -92,3 +103,4 @@ const MovieDetailsPage = () => {
 };
 
 export default MovieDetailsPage;
+

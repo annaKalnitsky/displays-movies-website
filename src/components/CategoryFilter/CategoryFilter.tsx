@@ -1,7 +1,7 @@
 import { useFocusable } from '@noriginmedia/norigin-spatial-navigation';
 import { Category } from '../../constants/category';
 import { FilterTab } from './FilterTab';
-import { SearchBar } from './SearchBar';
+import { SearchBar } from '../SearchBar/SearchBar';
 import styles from './CategoryFilter.module.scss';
 
 const TABS: { key: Category; label: string }[] = [

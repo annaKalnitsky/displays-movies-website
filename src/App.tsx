@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import HomePage from './pages/HomePage';
-import MovieDetailsPage from './pages/MovieDetailsPage';
+import HomePage from './pages/HomePage/HomePage';
+import MovieDetailsPage from './pages/MovieDetailsPage/MovieDetailsPage';
 import { KeyCode } from './constants/keyCode';
 
 const App = () => {

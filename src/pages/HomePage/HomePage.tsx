@@ -1,19 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import { useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
-import { MovieCard } from '../components/MovieCard/MovieCard';
-import CategoryFilter from '../components/CategoryFilter/CategoryFilter';
-import { Spinner } from '../components/Spinner/Spinner';
-import { Pagination } from '../components/Pagination/Pagination';
-import { fetchPopularRequest, fetchNowPlayingRequest, searchClear } from '../store/slices/moviesSlice';
-import type { RootState } from '../store';
-import { Category } from '../constants/category';
+import { fetchPopularRequest, fetchNowPlayingRequest, searchClear } from '../../store/slices/moviesSlice';
+import type { RootState } from '../../store';
+import { Category } from '../../constants/category';
+import { HomeHeader } from './components/HomeHeader';
+import { HomeContent } from './components/HomeContent';
 import styles from './HomePage.module.scss';
 
 const HomePage = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { popular, nowPlaying, searchResults, searchQuery, isLoading, error, currentPage, totalPages } = useSelector(
     (state: RootState) => state.movies
   );
@@ -32,7 +28,7 @@ const HomePage = () => {
 
   useEffect(() => {
     focusSelf();
-  }, []);
+  }, [focusSelf]);
 
   useEffect(() => {
     if (activeCategory === Category.Popular) {
@@ -78,55 +74,39 @@ const HomePage = () => {
         ? 'Airing Now'
         : 'My Favorites';
 
-  const handlePageSelect = (page: number) =>
-    activeCategory === Category.Popular ? dispatch(fetchPopularRequest(page)) : dispatch(fetchNowPlayingRequest(page));
-
-  const openMovie = (movieId: number) => navigate(`/movie/${movieId}`);
+  const emptyText = hasSearchQuery ? 'No results found' : 'No movies to show';
+  const handleSelectCategory = (category: Category) => {
+    dispatch(searchClear());
+    setActiveCategory(category);
+  };
 
   return (
     <FocusContext.Provider value={focusKey}>
       <div ref={ref} className={styles.homePage}>
-        <header className={styles.header}>
-          <h1 className={styles.title}>{categoryTitle}</h1>
-          <CategoryFilter
-            activeCategory={activeCategory}
-            onSelect={(category) => {
-              dispatch(searchClear());
-              setActiveCategory(category);
-            }}
-          />
-        </header>
+        <HomeHeader
+          title={categoryTitle}
+          activeCategory={activeCategory}
+          onSelectCategory={handleSelectCategory}
+        />
 
-        {isLoading && movies.length === 0 ? (
-          <div className={styles.loading}>
-            <Spinner size={48} />
-          </div>
-        ) : movies.length === 0 ? (
-          <p className={styles.empty}>No movies to show</p>
-        ) : (
-          <>
-            <div className={styles.movieGrid}>
-              {movies.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onSelect={() => openMovie(movie.id)}
-                />
-              ))}
-            </div>
-            {isPaginatedCategory && totalPages > 1 && (
-              <Pagination
-                key={activeCategory}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageSelect={handlePageSelect}
-              />
-            )}
-          </>
-        )}
+        <HomeContent
+          content={{
+            isLoading,
+            movies,
+            emptyText,
+          }}
+          pagination={{
+            enabled: isPaginatedCategory,
+            currentPage,
+            totalPages,
+            resetKey: activeCategory,
+            activeCategory,
+          }}
+        />
       </div>
     </FocusContext.Provider>
   );
 };
 
 export default HomePage;
+

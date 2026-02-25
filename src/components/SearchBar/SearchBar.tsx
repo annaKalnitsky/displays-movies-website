@@ -1,8 +1,10 @@
+import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusable, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { searchInputChange, searchClear } from '../../store/slices/moviesSlice';
 import type { RootState } from '../../store';
-import styles from './CategoryFilter.module.scss';
+import { useInputSpatialNav } from '../../hooks/useInputSpatialNav.ts';
+import styles from './SearchBar.module.scss';
 
 const ClearButton = ({ onClear }: { onClear: () => void }) => {
   const { ref, focused } = useFocusable({
@@ -28,9 +30,19 @@ export const SearchBar = () => {
   const dispatch = useDispatch();
   const searchQuery = useSelector((state: RootState) => state.movies.searchQuery);
 
+  const getFocusTarget = useCallback(
+    (direction: 'left' | 'right' | 'up' | 'down') => {
+      if (direction === 'right' && searchQuery) return 'search-clear';
+      return 'filter-favorites';
+    },
+    [searchQuery]
+  );
+  const { onKeyDownCapture } = useInputSpatialNav(getFocusTarget);
+
   const { ref: inputRef, focused: inputFocused } = useFocusable({
     focusKey: 'search-input',
     onEnterPress: () => {},
+    onArrowPress: () => true,
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,7 +55,7 @@ export const SearchBar = () => {
   };
 
   return (
-    <div className={styles.searchRow}>
+    <div className={styles.searchRow} onKeyDownCapture={onKeyDownCapture}>
       <input
         ref={inputRef}
         type="text"
@@ -58,3 +70,4 @@ export const SearchBar = () => {
     </div>
   );
 };
+

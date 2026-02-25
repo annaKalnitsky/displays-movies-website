@@ -12,18 +12,13 @@ interface PaginationProps {
 
 export const Pagination = ({ currentPage, totalPages, onPageSelect }: PaginationProps) => {
   const {
-    hookPage,
     windowStart,
     hasPrevWindow,
     hasNextWindow,
     pageNumbers,
-    setPage,
   } = usePaginationWindow(currentPage, totalPages);
 
-  const handlePageSelect = (page: number) => {
-    setPage(page - 1);
-    onPageSelect(page);
-  };
+  const handlePageSelect = (page: number) => onPageSelect(Math.min(Math.max(1, page), totalPages));
 
   return (
     <nav className={styles.pagination} aria-label="Pagination">
@@ -39,7 +34,7 @@ export const Pagination = ({ currentPage, totalPages, onPageSelect }: Pagination
         <PageButton
           key={page}
           page={page}
-          isActive={page === hookPage + 1}
+          isActive={page === currentPage}
           onClick={() => handlePageSelect(page)}
           focusKey={`pagination-page-${page}`}
         />
