@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusable, FocusContext, setFocus } from '@noriginmedia/norigin-spatial-navigation';
 import { MovieCard } from '../components/MovieCard/MovieCard';
@@ -12,7 +11,6 @@ import styles from './HomePage.module.scss';
 
 const HomePage = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { popular, nowPlaying, searchResults, searchQuery, isLoading, error, currentPage, totalPages } = useSelector(
     (state: RootState) => state.movies
   );
@@ -80,6 +78,14 @@ const HomePage = () => {
         ? 'Airing Now'
         : 'My Favorites';
 
+  const openMovieWindow = (movieId: number) => {
+    const url = `${window.location.origin}/movie/${movieId}`;
+    const features = 'popup=yes,noopener,noreferrer';
+
+    const win = window.open(url, `movie-${movieId}`, features);
+    win?.focus();
+  };
+
   return (
     <FocusContext.Provider value={focusKey}>
       <div ref={ref} className={styles.homePage}>
@@ -99,7 +105,7 @@ const HomePage = () => {
                 <MovieCard
                   key={movie.id}
                   movie={movie}
-                  onSelect={(m) => navigate(`/movie/${m.id}`)}
+                  onSelect={(m) => openMovieWindow(m.id)}
                 />
               ))}
             </div>
